@@ -1,4 +1,6 @@
-﻿using System.IO.Compression;
+﻿using Microsoft.Win32;
+using System.Diagnostics;
+using System.IO.Compression;
 
 namespace PP2Audio
 {
@@ -8,6 +10,20 @@ namespace PP2Audio
         {
             foreach (string arg in args)
             {
+                switch (arg)
+                {
+#pragma warning disable CA1416 // プラットフォームの互換性を検証
+                    case "-install":
+                        RegistryKey registryKey = Registry.CurrentUser.CreateSubKey(@"Software\Classes\SystemFileAssociations\.pptx\Shell\PP2Audio\");
+                        registryKey.SetValue(null, "PP2Audioで開く");
+                        registryKey = registryKey.CreateSubKey("Command");
+                        registryKey.SetValue(null, $"\"{Process.GetCurrentProcess().MainModule!.FileName}\" \"%1\"");
+                        continue;
+                    case "-uninstall":
+                        Registry.CurrentUser.DeleteSubKeyTree(@"Software\Classes\SystemFileAssociations\.pptx\Shell\PP2Audio\");
+                        continue;
+#pragma warning restore CA1416 // プラットフォームの互換性を検証
+                }
                 string ppFilePath = arg;
                 if (!File.Exists(ppFilePath)) { continue; }
                 string zipFilePath = Path.Combine(Path.GetTempPath(), Path.GetFileNameWithoutExtension(ppFilePath) + ".zip");
